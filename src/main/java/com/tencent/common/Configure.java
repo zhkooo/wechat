@@ -9,7 +9,7 @@ package com.tencent.common;
 public class Configure {
 
 	//sdk的版本号
-	private static final String sdkVersion = "1.0";
+	private static final String sdkVersion = "java sdk 1.0.1";
 
 //这个就是自己要保管好的私有Key了（切记只能放在自己的后台代码里，不能放在任何可能被看到源代码的客户端程序中）
 	// 每次自己Post数据给API的时候都要用这个key来对所有字段进行签名，生成的签名会放在Sign这个字段，API收到Post数据的时候也会用同样的签名算法对Post过来的数据进行签名和验证

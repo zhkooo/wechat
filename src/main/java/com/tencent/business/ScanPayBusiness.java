@@ -44,6 +44,11 @@ public class ScanPayBusiness {
         //支付请求API返回的数据签名验证失败，有可能数据被篡改了
         void onFailBySignInvalid(ScanPayResData scanPayResData);
 
+        //查询请求API返回的数据签名验证失败，有可能数据被篡改了
+        void onFailByQuerySignInvalid(ScanPayQueryResData scanPayQueryResData);
+
+        //撤销请求API返回的数据签名验证失败，有可能数据被篡改了
+        void onFailByReverseSignInvalid(ReverseResData reverseResData);
 
         //用户用来支付的二维码已经过期，提示收银员重新扫一下用户微信“刷卡”里面的二维码
         void onFailByAuthCodeExpire(ScanPayResData scanPayResData);
@@ -178,8 +183,9 @@ public class ScanPayBusiness {
 
                 log.i("【一次性支付成功】");
 
-                if(!scanPayResData.getTransaction_id().equals("")){
-                    transactionID = scanPayResData.getTransaction_id();
+                String transID = scanPayResData.getTransaction_id();
+                if(transID != null){
+                    transactionID = transID;
                 }
 
                 resultListener.onSuccess(scanPayResData,transactionID);
@@ -198,7 +204,7 @@ public class ScanPayBusiness {
                     //--------------------------------------------------------------------
 
                     //对于扣款明确失败的情况直接走撤销逻辑
-                    doReverseLoop(outTradeNo);
+                    doReverseLoop(outTradeNo,resultListener);
 
                     //以下几种情况建议明确提示用户，指导接下来的工作
                     if (errorCode.equals("AUTHCODEEXPIRE")) {
@@ -221,12 +227,12 @@ public class ScanPayBusiness {
                     //--------------------------------------------------------------------
 
                     //表示有可能单次消费超过300元，或是免输密码消费次数已经超过当天的最大限制，这个时候提示用户输入密码，商户自己隔一段时间去查单，查询一定次数，看用户是否已经输入了密码
-                    if (doPayQueryLoop(payQueryLoopInvokedCount, outTradeNo)) {
+                    if (doPayQueryLoop(payQueryLoopInvokedCount, outTradeNo,resultListener)) {
                         log.i("【需要用户输入密码、查询到支付成功】");
                         resultListener.onSuccess(scanPayResData,transactionID);
                     } else {
                         log.i("【需要用户输入密码、在一定时间内没有查询到支付成功、走撤销流程】");
-                        doReverseLoop(outTradeNo);
+                        doReverseLoop(outTradeNo,resultListener);
                         resultListener.onFail(scanPayResData);
                     }
                 } else {
@@ -235,12 +241,12 @@ public class ScanPayBusiness {
                     //4)扣款未知失败
                     //--------------------------------------------------------------------
 
-                    if (doPayQueryLoop(payQueryLoopInvokedCount, outTradeNo)) {
+                    if (doPayQueryLoop(payQueryLoopInvokedCount, outTradeNo,resultListener)) {
                         log.i("【支付扣款未知失败、查询到支付成功】");
                         resultListener.onSuccess(scanPayResData,transactionID);
                     } else {
                         log.i("【支付扣款未知失败、在一定时间内没有查询到支付成功、走撤销流程】");
-                        doReverseLoop(outTradeNo);
+                        doReverseLoop(outTradeNo,resultListener);
                         resultListener.onFail(scanPayResData);
                     }
                 }
@@ -252,10 +258,11 @@ public class ScanPayBusiness {
      * 进行一次支付订单查询操作
      *
      * @param outTradeNo    商户系统内部的订单号,32个字符内可包含字母, [确保在商户系统唯一]
+     * @param resultListener 商户需要自己监听被扫支付业务逻辑可能触发的各种分支事件，并做好合理的响应处理
      * @return 该订单是否支付成功
      * @throws Exception
      */
-    private boolean doOnePayQuery(String outTradeNo) throws Exception {
+    private boolean doOnePayQuery(String outTradeNo,ResultListener resultListener) throws Exception {
 
         sleep(waitingTimeBeforePayQueryServiceInvoked);//等待一定时间再进行查询，避免状态还没来得及被更新
 
@@ -279,9 +286,17 @@ public class ScanPayBusiness {
             log.i("支付订单查询API系统返回失败，失败信息为：" + scanPayQueryResData.getReturn_msg());
             return false;
         } else {
+
+            if (!Signature.checkIsSignValidFromResponseString(payQueryServiceResponseString)) {
+                log.e("【支付失败】支付请求API返回的数据签名验证失败，有可能数据被篡改了");
+                resultListener.onFailByQuerySignInvalid(scanPayQueryResData);
+                return false;
+            }
+
             if (scanPayQueryResData.getResult_code().equals("SUCCESS")) {//业务层成功
-                if(!scanPayQueryResData.getTransaction_id().equals("")){
-                    transactionID = scanPayQueryResData.getTransaction_id();
+                String transID = scanPayQueryResData.getTransaction_id();
+                if(transID != null){
+                    transactionID = transID;
                 }
                 if (scanPayQueryResData.getTrade_state().equals("SUCCESS")) {
                     //表示查单结果为“支付成功”
@@ -296,6 +311,7 @@ public class ScanPayBusiness {
                 log.i("查询出错，错误码：" + scanPayQueryResData.getErr_code() + "     错误信息：" + scanPayQueryResData.getErr_code_des());
                 return false;
             }
+
         }
     }
 
@@ -304,17 +320,18 @@ public class ScanPayBusiness {
      *
      * @param loopCount     循环次数，至少一次
      * @param outTradeNo    商户系统内部的订单号,32个字符内可包含字母, [确保在商户系统唯一]
+     * @param resultListener 商户需要自己监听被扫支付业务逻辑可能触发的各种分支事件，并做好合理的响应处理
      * @return 该订单是否支付成功
      * @throws InterruptedException
      */
-    private boolean doPayQueryLoop(int loopCount, String outTradeNo) throws Exception {
+    private boolean doPayQueryLoop(int loopCount, String outTradeNo,ResultListener resultListener) throws Exception {
         //至少查询一次
         if (loopCount == 0) {
             loopCount = 1;
         }
         //进行循环查询
         for (int i = 0; i < loopCount; i++) {
-            if (doOnePayQuery(outTradeNo)) {
+            if (doOnePayQuery(outTradeNo,resultListener)) {
                 return true;
             }
         }
@@ -328,10 +345,11 @@ public class ScanPayBusiness {
      * 进行一次撤销操作
      *
      * @param outTradeNo    商户系统内部的订单号,32个字符内可包含字母, [确保在商户系统唯一]
+     * @param resultListener 商户需要自己监听被扫支付业务逻辑可能触发的各种分支事件，并做好合理的响应处理
      * @return 该订单是否支付成功
      * @throws Exception
      */
-    private boolean doOneReverse(String outTradeNo) throws Exception {
+    private boolean doOneReverse(String outTradeNo,ResultListener resultListener) throws Exception {
 
         sleep(waitingTimeBeforeReverseServiceInvoked);//等待一定时间再进行查询，避免状态还没来得及被更新
 
@@ -353,6 +371,15 @@ public class ScanPayBusiness {
             log.i("支付订单撤销API系统返回失败，失败信息为：" + reverseResData.getReturn_msg());
             return false;
         } else {
+
+            if (!Signature.checkIsSignValidFromResponseString(reverseResponseString)) {
+                log.e("【支付失败】支付请求API返回的数据签名验证失败，有可能数据被篡改了");
+                resultListener.onFailByReverseSignInvalid(reverseResData);
+                needRecallReverse = false;//数据被窜改了，不需要再重试
+                return false;
+            }
+
+
             if (reverseResData.getResult_code().equals("FAIL")) {
                 log.i("撤销出错，错误码：" + reverseResData.getErr_code() + "     错误信息：" + reverseResData.getErr_code_des());
                 if (reverseResData.getRecall().equals("Y")) {
@@ -377,14 +404,15 @@ public class ScanPayBusiness {
      * 由于有的时候是因为服务延时，所以需要商户每隔一段时间（建议5秒）后再进行查询操作，是否需要继续循环调用撤销API由撤销API回包里面的recall字段决定。
      *
      * @param outTradeNo    商户系统内部的订单号,32个字符内可包含字母, [确保在商户系统唯一]
+     * @param resultListener 商户需要自己监听被扫支付业务逻辑可能触发的各种分支事件，并做好合理的响应处理
      * @throws InterruptedException
      */
-    private void doReverseLoop(String outTradeNo) throws Exception {
+    private void doReverseLoop(String outTradeNo,ResultListener resultListener) throws Exception {
         //初始化这个标记
         needRecallReverse = true;
         //进行循环撤销，直到撤销成功，或是API返回recall字段为"Y"
         while (needRecallReverse) {
-            if (doOneReverse(outTradeNo)) {
+            if (doOneReverse(outTradeNo,resultListener)) {
                 return;
             }
         }

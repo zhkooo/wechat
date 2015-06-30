@@ -204,7 +204,11 @@ public class ScanPayQueryResData {
     }
 
     public String getTransaction_id() {
-        return transaction_id;
+        if(transaction_id != null) {
+            return transaction_id;
+        }else{
+            return "";
+        }
     }
 
     public void setTransaction_id(String transaction_id) {
