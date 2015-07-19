@@ -91,5 +91,5 @@ payServiceResponseString = PayService.request(
 
 
 ## 如何使用该SDK：   
-请直接下载demo，demo那边也有详细的指引，商户用demo中完善的代码进行补充流程处理就可以了。[点此获取demo](https://github.com/grz/wxpay_scanpay_java_demo)        
+请直接下载demo，demo那边也有详细的指引，商户用demo中完善的代码进行补充流程处理就可以了。[点此获取demo](https://github.com/grz/wxpay_scanpay_java_demo_proj)        
 ###### ([返回目录](#user-content-快速上手))  
