@@ -17,16 +17,23 @@ public abstract class BaseType implements  Serializable{
     private static final long serialVersionUID = -199712849987884225L;
     
 	private Integer index;	 	// 顺序
+	private String code;   //可以不为唯一
 	private String  description;// 描述
 	
-	protected BaseType(Integer index, String description,Object empty) {
+	protected BaseType(Integer index,String code, String description,Object empty) {
 		this.index = index;
+		this.code = code;
 		this.description = description;
 	}
 	
-	protected BaseType(Integer index, String description) {
+	protected BaseType(Integer index,String code,  String description) {
 		this.index = index;
+		this.code = code;
 		this.description = description;
+	}
+	
+	protected BaseType(Integer index,  String description) {
+		this(index,"",description);
 	}
 	
 	protected BaseType(){}
@@ -50,6 +57,18 @@ public abstract class BaseType implements  Serializable{
 			List<T> list =  (List<T>) BaseType.getAll(clazz);
 			for(T t: list){
 				if(t.getIndex() == index){
+					return t;
+				}
+			}
+		}catch(Exception e){}
+		return null;
+	}
+	
+	public static <T extends BaseType> T valueOf(Class<T> clazz, String code){
+		try{
+			List<T> list =  (List<T>) BaseType.getAll(clazz);
+			for(T t: list){
+				if(t.getCode().equals(code)){
 					return t;
 				}
 			}
@@ -112,6 +131,14 @@ public abstract class BaseType implements  Serializable{
 
 	public String getDescription() {
 		return description;
+	}
+
+	public String getCode() {
+		return code;
+	}
+
+	public void setCode(String code) {
+		this.code = code;
 	}
 
 	public String toString() {
