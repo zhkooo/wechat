@@ -1,23 +1,18 @@
-package com.tencent.protocol.pay_protocol;
-
-/**
- * User: rizenguo
- * Date: 2014/10/22
- * Time: 21:29
- */
-
-import com.tencent.common.Configure;
-import com.tencent.common.RandomStringGenerator;
-import com.tencent.common.Signature;
+package com.hehe.weixin.protocol;
 
 import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.hehe.weixin.vo.SwipCardPayVo;
+import com.tencent.common.Configure;
+import com.tencent.common.RandomStringGenerator;
+import com.tencent.common.Signature;
+
 /**
- * 请求被扫支付API需要提交的数据
+ * 请求刷卡支付API需要提交的数据
  */
-public class ScanPayReqData {
+public class SwipCardReqData {
 
     //每个字段具体的意思请查看API文档
     private String appid = "";
@@ -26,16 +21,30 @@ public class ScanPayReqData {
     private String nonce_str = "";
     private String sign = "";
     private String body = "";
+    private String detail = "";
     private String attach = "";
     private String out_trade_no = "";
     private int total_fee = 0;
+    private String fee_type = "";
     private String spbill_create_ip = "";
     private String time_start = "";
     private String time_expire = "";
     private String goods_tag = "";
+    private String limit_pay = "";
     private String auth_code = "";
     private String sdk_version;
 
+    public void init(){
+
+        //微信分配的公众号ID（开通公众号之后可以获取到）
+        setAppid(Configure.getAppid());
+
+        //微信支付分配的商户号ID（开通公众号的微信支付功能之后可以获取到）
+        setMch_id(Configure.getMchid());
+
+        //随机字符串，不长于32 位
+        setNonce_str(RandomStringGenerator.getRandomStringByLength(32));
+    }
     /**
      * @param authCode 这个是扫码终端设备从用户手机上扫取到的支付授权号，这个号是跟用户用来支付的银行卡绑定的，有效期是1分钟
      * @param body 要支付的商品的描述信息，用户会在支付成功页面里看到这个信息
@@ -48,16 +57,8 @@ public class ScanPayReqData {
      * @param timeExpire 订单失效时间，格式同上
      * @param goodsTag 商品标记，微信平台配置的商品标记，用于优惠券或者满减使用
      */
-    public ScanPayReqData(String authCode,String body,String attach,String outTradeNo,int totalFee,String deviceInfo,String spBillCreateIP,String timeStart,String timeExpire,String goodsTag){
-
-        setSdk_version(Configure.getSdkVersion());
-
-        //微信分配的公众号ID（开通公众号之后可以获取到）
-        setAppid(Configure.getAppid());
-
-        //微信支付分配的商户号ID（开通公众号的微信支付功能之后可以获取到）
-        setMch_id(Configure.getMchid());
-
+    public SwipCardReqData(String authCode,String body,String attach,String outTradeNo,int totalFee,String deviceInfo,String spBillCreateIP,String timeStart,String timeExpire,String goodsTag){
+    	init();
         //这个是扫码终端设备从用户手机上扫取到的支付授权号，这个号是跟用户用来支付的银行卡绑定的，有效期是1分钟
         //调试的时候可以在微信上打开“钱包”里面的“刷卡”，将扫码页面里的那一串14位的数字输入到这里来，进行提交验证
         //记住out_trade_no这个订单号可以将这一笔支付进行退款
@@ -90,14 +91,43 @@ public class ScanPayReqData {
         //商品标记，微信平台配置的商品标记，用于优惠券或者满减使用
         setGoods_tag(goodsTag);
 
-        //随机字符串，不长于32 位
-        setNonce_str(RandomStringGenerator.getRandomStringByLength(32));
 
         //根据API给的签名规则进行签名
         String sign = Signature.getSign(toMap());
         setSign(sign);//把签名数据设置到Sign这个属性中
 
     }
+    
+    public SwipCardReqData(SwipCardPayVo swipCardPayVo){
+    	init();
+    	this.attach = swipCardPayVo.getAttach();
+    	this.body = swipCardPayVo.getBody();
+    	this.detail = swipCardPayVo.getDetail();
+    	this.device_info = swipCardPayVo.getDevice_info();
+    	this.fee_type = swipCardPayVo.getFee_type();
+    	this.goods_tag = swipCardPayVo.getGoods_tag();
+    	this.spbill_create_ip = swipCardPayVo.getSpbill_create_ip();
+    	this.total_fee = swipCardPayVo.getTotal_fee();
+    	this.limit_pay = swipCardPayVo.getLimit_pay();
+    	this.auth_code = swipCardPayVo.getAuth_code();
+    }
+    
+    public SwipCardReqData buildOutTradeNo(String outTradeNo){
+    	setOut_trade_no(outTradeNo);
+    	return this;
+    }
+    
+    /**
+     * 所有字段设值完成后，才调用改方法
+     * @return
+     */
+    public SwipCardReqData buildSign(){
+    	 //根据API给的签名规则进行签名
+        String sign = Signature.getSign(toMap());
+        setSign(sign);//把签名数据设置到Sign这个属性中
+    	return this;
+    }
+    
 
     public String getAppid() {
         return appid;
@@ -218,8 +248,34 @@ public class ScanPayReqData {
     public void setSdk_version(String sdk_version) {
         this.sdk_version = sdk_version;
     }
+    
 
-    public Map<String,Object> toMap(){
+    public String getDetail() {
+		return detail;
+	}
+
+	public void setDetail(String detail) {
+		this.detail = detail;
+	}
+
+	public String getFee_type() {
+		return fee_type;
+	}
+
+	public void setFee_type(String fee_type) {
+		this.fee_type = fee_type;
+	}
+
+	
+	public String getLimit_pay() {
+		return limit_pay;
+	}
+
+	public void setLimit_pay(String limit_pay) {
+		this.limit_pay = limit_pay;
+	}
+
+	public Map<String,Object> toMap(){
         Map<String,Object> map = new HashMap<String, Object>();
         Field[] fields = this.getClass().getDeclaredFields();
         for (Field field : fields) {
