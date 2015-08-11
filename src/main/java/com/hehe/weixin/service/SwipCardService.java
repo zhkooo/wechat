@@ -1,6 +1,7 @@
 package com.hehe.weixin.service;
 
 import com.hehe.common.ModelResult;
+import com.hehe.weixin.protocol.SwipCardResData;
 import com.hehe.weixin.vo.SwipCardPayVo;
 
 /**
@@ -10,5 +11,5 @@ import com.hehe.weixin.vo.SwipCardPayVo;
  */
 public interface SwipCardService {
 	
-	public ModelResult paySync(SwipCardPayVo swipCardPayVo);
+	public ModelResult<SwipCardResData> paySync(SwipCardPayVo swipCardPayVo);
 }

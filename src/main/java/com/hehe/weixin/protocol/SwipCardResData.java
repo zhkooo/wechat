@@ -171,6 +171,21 @@ public class SwipCardResData {
 	public void setTime_end(String time_end) {
 		this.time_end = time_end;
 	}
+	@Override
+	public String toString() {
+		return "SwipCardResData [return_code=" + return_code + ", return_msg="
+				+ return_msg + ", appid=" + appid + ", mch_id=" + mch_id
+				+ ", device_info=" + device_info + ", nonce_str=" + nonce_str
+				+ ", sign=" + sign + ", result_code=" + result_code
+				+ ", err_code=" + err_code + ", err_code_des=" + err_code_des
+				+ ", openid=" + openid + ", is_subscribe=" + is_subscribe
+				+ ", trade_type=" + trade_type + ", bank_type=" + bank_type
+				+ ", fee_type=" + fee_type + ", total_fee=" + total_fee
+				+ ", cash_fee_type=" + cash_fee_type + ", cash_fee=" + cash_fee
+				+ ", coupon_fee=" + coupon_fee + ", transaction_id="
+				+ transaction_id + ", out_trade_no=" + out_trade_no
+				+ ", attach=" + attach + ", time_end=" + time_end + "]";
+	}
 
     
 

@@ -7,12 +7,12 @@ import java.util.Map;
 import com.hehe.common.Configure;
 import com.hehe.common.Signature;
 import com.hehe.utils.RandomStringGenerator;
-import com.hehe.weixin.vo.SwipCardPayVo;
+import com.hehe.weixin.vo.ScanPayVo;
 
 /**
- * 请求刷卡支付API需要提交的数据
+ * 请求扫码支付API需要提交的数据
  */
-public class SwipCardReqData {
+public class WeiXinUnifiedOrderReqData {
 
     //每个字段具体的意思请查看API文档
     private String appid = "";
@@ -31,9 +31,13 @@ public class SwipCardReqData {
     private String time_expire = "";
     private String goods_tag = "";
     private String limit_pay = "";
-    private String auth_code = "";
-    private String sdk_version;
-
+    
+    private String notify_url = "";
+    private String trade_type = "";
+    private String product_id = "";
+    private String openid = "";
+    
+    public WeiXinUnifiedOrderReqData(){}
     public void init(){
 
         //微信分配的公众号ID（开通公众号之后可以获取到）
@@ -57,62 +61,90 @@ public class SwipCardReqData {
      * @param timeExpire 订单失效时间，格式同上
      * @param goodsTag 商品标记，微信平台配置的商品标记，用于优惠券或者满减使用
      */
-    public SwipCardReqData(String authCode,String body,String attach,String outTradeNo,int totalFee,String deviceInfo,String spBillCreateIP,String timeStart,String timeExpire,String goodsTag){
+    public WeiXinUnifiedOrderReqData(String body,String outTradeNo,int totalFee,String spBillCreateIP,String notify_url
+    		,String trade_type){
     	init();
-        //这个是扫码终端设备从用户手机上扫取到的支付授权号，这个号是跟用户用来支付的银行卡绑定的，有效期是1分钟
-        //调试的时候可以在微信上打开“钱包”里面的“刷卡”，将扫码页面里的那一串14位的数字输入到这里来，进行提交验证
-        //记住out_trade_no这个订单号可以将这一笔支付进行退款
-        setAuth_code(authCode);
-
         //要支付的商品的描述信息，用户会在支付成功页面里看到这个信息
         setBody(body);
-
-        //支付订单里面可以填的附加数据，API会将提交的这个附加数据原样返回，有助于商户自己可以注明该笔消费的具体内容，方便后续的运营和记录
-        setAttach(attach);
-
         //商户系统内部的订单号,32个字符内可包含字母, 确保在商户系统唯一
         setOut_trade_no(outTradeNo);
-
         //订单总金额，单位为“分”，只能整数
         setTotal_fee(totalFee);
-
-        //商户自己定义的扫码支付终端设备号，方便追溯这笔交易发生在哪台终端设备上
-        setDevice_info(deviceInfo);
-
-        //订单生成的机器IP
         setSpbill_create_ip(spBillCreateIP);
-
-        //订单生成时间， 格式为yyyyMMddHHmmss，如2009年12 月25 日9 点10 分10 秒表示为20091225091010。时区为GMT+8 beijing。该时间取自商户服务器
-        setTime_start(timeStart);
-
-        //订单失效时间，格式同上
-        setTime_expire(timeExpire);
-
-        //商品标记，微信平台配置的商品标记，用于优惠券或者满减使用
-        setGoods_tag(goodsTag);
-
-
-        //根据API给的签名规则进行签名
-        String sign = Signature.getSign(toMap());
-        setSign(sign);//把签名数据设置到Sign这个属性中
-
+        setNotify_url(notify_url);
+        setTrade_type(trade_type);
     }
     
-    public SwipCardReqData(SwipCardPayVo swipCardPayVo){
+    public WeiXinUnifiedOrderReqData(ScanPayVo scanPayVo){
     	init();
-    	this.attach = swipCardPayVo.getAttach();
-    	this.body = swipCardPayVo.getBody();
-    	this.detail = swipCardPayVo.getDetail();
-    	this.device_info = swipCardPayVo.getDevice_info();
-    	this.fee_type = swipCardPayVo.getFee_type();
-    	this.goods_tag = swipCardPayVo.getGoods_tag();
-    	this.spbill_create_ip = swipCardPayVo.getSpbill_create_ip();
-    	this.total_fee = swipCardPayVo.getTotal_fee();
-    	this.limit_pay = swipCardPayVo.getLimit_pay();
-    	this.auth_code = swipCardPayVo.getAuth_code();
+    	this.attach = scanPayVo.getAttach();
+    	this.body = scanPayVo.getBody();
+    	this.detail = scanPayVo.getDetail();
+    	this.device_info = scanPayVo.getDevice_info();
+    	this.fee_type = scanPayVo.getFee_type();
+    	this.goods_tag = scanPayVo.getGoods_tag();
+    	this.spbill_create_ip = scanPayVo.getSpbill_create_ip();
+    	this.time_start = scanPayVo.getTime_start();
+    	this.time_expire = scanPayVo.getTime_expire();
+    	this.total_fee = scanPayVo.getTotal_fee();
+    	this.limit_pay = scanPayVo.getLimit_pay();
+    	this.product_id = scanPayVo.getProduct_id();
+    	this.notify_url = scanPayVo.getNotify_url();
+    	this.trade_type = scanPayVo.getTrade_type();
+    	this.openid = scanPayVo.getOpenid();
     }
     
-    public SwipCardReqData buildOutTradeNo(String outTradeNo){
+    public WeiXinUnifiedOrderReqData buildDevice_info(String device_info){
+    	setDevice_info(device_info);
+    	return this;
+    }
+    
+    public WeiXinUnifiedOrderReqData buildDetail(String detail){
+    	setDetail(detail);
+    	return this;
+    }
+    
+    public WeiXinUnifiedOrderReqData buildAttach(String attach){
+    	setAttach(attach);
+    	return this;
+    }
+    
+    public WeiXinUnifiedOrderReqData buildTime_start(String time_start){
+    	setTime_start(time_start);
+    	return this;
+    }
+    
+    public WeiXinUnifiedOrderReqData buildTime_expire(String time_expire){
+    	setTime_expire(time_expire);
+    	return this;
+    }
+    
+    public WeiXinUnifiedOrderReqData buildProduct_id(String product_id){
+    	setProduct_id(product_id);
+    	return this;
+    }
+    
+    public WeiXinUnifiedOrderReqData buildLimit_pay(String limit_pay){
+    	setLimit_pay(limit_pay);
+    	return this;
+    }
+    
+    public WeiXinUnifiedOrderReqData buildOpenid(String openid){
+    	setOpenid(openid);
+    	return this;
+    }
+    
+    public WeiXinUnifiedOrderReqData buildGoods_tag(String goods_tag){
+    	setGoods_tag(goods_tag);
+    	return this;
+    }
+    
+    public WeiXinUnifiedOrderReqData buildFee_type(String fee_type){
+    	setAttach(attach);
+    	return this;
+    }
+    
+    public WeiXinUnifiedOrderReqData buildOutTradeNo(String outTradeNo){
     	setOut_trade_no(outTradeNo);
     	return this;
     }
@@ -121,7 +153,7 @@ public class SwipCardReqData {
      * 所有字段设值完成后，才调用改方法
      * @return
      */
-    public SwipCardReqData buildSign(){
+    public WeiXinUnifiedOrderReqData buildSign(){
     	 //根据API给的签名规则进行签名
         String sign = Signature.getSign(toMap());
         setSign(sign);//把签名数据设置到Sign这个属性中
@@ -233,23 +265,6 @@ public class SwipCardReqData {
         this.goods_tag = goods_tag;
     }
 
-    public String getAuth_code() {
-        return auth_code;
-    }
-
-    public void setAuth_code(String auth_code) {
-        this.auth_code = auth_code;
-    }
-
-    public String getSdk_version(){
-        return sdk_version;
-    }
-
-    public void setSdk_version(String sdk_version) {
-        this.sdk_version = sdk_version;
-    }
-    
-
     public String getDetail() {
 		return detail;
 	}
@@ -275,6 +290,38 @@ public class SwipCardReqData {
 		this.limit_pay = limit_pay;
 	}
 
+	public String getNotify_url() {
+		return notify_url;
+	}
+	
+	public void setNotify_url(String notify_url) {
+		this.notify_url = notify_url;
+	}
+	
+	public String getTrade_type() {
+		return trade_type;
+	}
+	
+	public void setTrade_type(String trade_type) {
+		this.trade_type = trade_type;
+	}
+	
+	public String getProduct_id() {
+		return product_id;
+	}
+	
+	public void setProduct_id(String product_id) {
+		this.product_id = product_id;
+	}
+	
+	public String getOpenid() {
+		return openid;
+	}
+	
+	public void setOpenid(String openid) {
+		this.openid = openid;
+	}
+	
 	public Map<String,Object> toMap(){
         Map<String,Object> map = new HashMap<String, Object>();
         Field[] fields = this.getClass().getDeclaredFields();
@@ -295,15 +342,16 @@ public class SwipCardReqData {
     }
 	@Override
 	public String toString() {
-		return "SwipCardReqData [appid=" + appid + ", mch_id=" + mch_id
-				+ ", device_info=" + device_info + ", nonce_str=" + nonce_str
-				+ ", sign=" + sign + ", body=" + body + ", detail=" + detail
-				+ ", attach=" + attach + ", out_trade_no=" + out_trade_no
-				+ ", total_fee=" + total_fee + ", fee_type=" + fee_type
-				+ ", spbill_create_ip=" + spbill_create_ip + ", time_start="
-				+ time_start + ", time_expire=" + time_expire + ", goods_tag="
-				+ goods_tag + ", limit_pay=" + limit_pay + ", auth_code="
-				+ auth_code + ", sdk_version=" + sdk_version + "]";
+		return "WeiXinUnifiedOrderReqData [appid=" + appid + ", mch_id="
+				+ mch_id + ", device_info=" + device_info + ", nonce_str="
+				+ nonce_str + ", sign=" + sign + ", body=" + body + ", detail="
+				+ detail + ", attach=" + attach + ", out_trade_no="
+				+ out_trade_no + ", total_fee=" + total_fee + ", fee_type="
+				+ fee_type + ", spbill_create_ip=" + spbill_create_ip
+				+ ", time_start=" + time_start + ", time_expire=" + time_expire
+				+ ", goods_tag=" + goods_tag + ", limit_pay=" + limit_pay
+				+ ", notify_url=" + notify_url + ", trade_type=" + trade_type
+				+ ", product_id=" + product_id + ", openid=" + openid + "]";
 	}
 
 }

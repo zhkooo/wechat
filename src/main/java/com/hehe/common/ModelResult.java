@@ -60,7 +60,8 @@ public class ModelResult<T> extends BaseResult {
 	public void setReadFromCache(boolean readFromCache) {
 		this.readFromCache = readFromCache;
 	}
-    public <SubClass extends ModelResult> SubClass withError(ErrorCode error) {
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+	public <SubClass extends ModelResult> SubClass withError(ErrorCode error) {
         this.getErrorList().put(String.valueOf(error.getIndex()), error.getDescription());
         return (SubClass) this;
     }

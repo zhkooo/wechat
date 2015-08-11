@@ -2,6 +2,7 @@ package com.hehe.common;
 
 
 
+
 public interface ErrorCode  {
 
     
@@ -44,7 +45,7 @@ public interface ErrorCode  {
     public static class BuzzError extends BaseType implements ErrorCode{
         
         private static final long serialVersionUID = -7588376604965702002L;
-        
+        public static final BuzzError BUSINESS_FAIL = new BuzzError(20000,"BUSINESS_FAIL","业务失败");
         //支付返回状态-->支付确认失败(20001-20199) 直接提示
         public static final BuzzError ORDERPAID = new BuzzError(20001,"ORDERPAID","该订单号已支付，如果是新单，请重新下单");
         public static final BuzzError AUTHCODEEXPIRE = new BuzzError(20002,"AUTHCODEEXPIRE","二维码已过期，请用户在微信上刷新后再试");
@@ -70,23 +71,25 @@ public interface ErrorCode  {
         public static final BuzzError SYSTEMERROR = new BuzzError(20200,"SYSTEMERROR ","系统超时");
         public static final BuzzError BANKERROR = new BuzzError(20201,"BANKERROR ","银行系统异常");
         public static final BuzzError USERPAYING = new BuzzError(20202,"USERPAYING ","用户支付中，需要输入密码");
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+        //其他
+        public static final BuzzError QUERY_ORDER_FAIL = new BuzzError(20300,"QUERY_ORDER_FAIL ","查询到订单支付不成功");
+         
+        public static ErrorCode getBuzzErrorByCode(String errorCode){
+        	ErrorCode errorCodeTemp = ErrorCode.SystemError.UNKNOWN_ERROR;
+        	if(null != BuzzError.valueOf(BuzzError.class, errorCode)){
+        		errorCodeTemp = BuzzError.valueOf(BuzzError.class, errorCode);
+        	}
+        	return errorCodeTemp;
+        }
         
- 
+        public static boolean isUnknownResult(String errorCode){
+        	   if (("SYSTEMERROR").equals(errorCode) || ("BANKERROR").equals(errorCode) ||("USERPAYING").equals(errorCode)) {
+        		   return true;
+        	   }
+        	return false;
+        }
+        
+        
         private BuzzError(){
             super(null, null);
         }

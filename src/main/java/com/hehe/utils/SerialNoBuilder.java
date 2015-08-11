@@ -9,8 +9,6 @@ import java.util.Date;
 import org.apache.commons.lang.RandomStringUtils;
 import org.apache.commons.lang.time.DateFormatUtils;
 
-import com.tencent.common.MD5;
-
 /**
  * 业务编号统一生成器
  * 
